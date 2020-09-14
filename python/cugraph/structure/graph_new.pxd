@@ -18,12 +18,54 @@
 
 from libcpp cimport bool
 from libcpp.memory cimport unique_ptr
-
+from libcpp.vector cimport vector
 from rmm._lib.device_buffer cimport device_buffer
 
 cdef extern from "raft/handle.hpp" namespace "raft":
     cdef cppclass handle_t:
         handle_t() except +
+
+cdef extern from "experimental/graph_view.hpp" namespace "cugraph::experimental::detail":
+    cdef cppclass graph_base_t[VT,ET,WT]:
+        pass
+
+cdef extern from *:
+   ctypedef int TRUE "true"
+   ctypedef int FALSE "false"
+
+cdef extern from "experimental/graph_view.hpp" namespace "cugraph::experimental":
+    cdef cppclass partition_t[VT]:
+        vector[VT] vertex_partition_offsets
+        bool hypergraph_partitioned
+
+    cdef cppclass graph_view_t[VT,ET,WT,st,mg](graph_base_t[VT,ET,WT]):
+        graph_view_t(const handle_t &handle,
+                     const vector[ET*] &offsets,
+                     const vector[VT*] &indices,
+                     const vector[WT*] &weights,
+                     const vector[VT] &seg_offsets,
+                     const partition_t[VT] &partition,
+                     VT num_verts,
+                     ET num_edges,
+                     bool is_symmetric,
+                     bool is_multigraph,
+                     bool is_weighted,
+                     bool sorted_by_global_degree_within_vertex_partition,
+                     bool do_expensive_check)
+
+        graph_view_t(const handle_t &handle,
+                     const ET* &offsets,
+                     const VT* &indices,
+                     const WT* &weights,
+                     const vector[VT] &seg_offsets,
+                     VT num_verts,
+                     ET num_edges,
+                     bool is_symmetric,
+                     bool is_multigraph,
+                     bool is_weighted,
+                     bool sorted_by_global_degree_within_vertex_partition,
+                     bool do_expensive_check)
+
 
 cdef extern from "graph.hpp" namespace "cugraph":
 
